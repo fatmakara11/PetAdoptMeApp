@@ -2,8 +2,9 @@
   "ExpandedNodes": [
     "",
     "\\app",
+    "\\app\\components",
     "\\app\\pet-details"
   ],
-  "SelectedNode": "\\app\\pet-details\\index.jsx",
+  "SelectedNode": "\\app\\components",
   "PreviewInSolutionExplorer": false
 }
