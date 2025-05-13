@@ -1,63 +1,84 @@
-import { useOAuth } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
 import { Image, Pressable, Text, View } from "react-native";
 import Colors from "../../constants/Colors";
 
-WebBrowser.maybeCompleteAuthSession();
-
+// Login ekranı artık sadece giriş sayfasına yönlendiriyor
 export default function LoginScreen() {
-    const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
     const router = useRouter();
 
-    const onPress = async () => {
-        try {
-            const { createdSessionId, setActive } = await startOAuthFlow();
+    const handleSignIn = () => {
+        router.push("/(auth)/sign-in");
+    };
 
-            if (createdSessionId) {
-                await setActive({ session: createdSessionId });
-                router.replace("/(tabs)");
-            }
-        } catch (err) {
-            console.error("OAuth error", err);
-        }
+    const handleSignUp = () => {
+        router.push("/(auth)/sign-up");
     };
 
     return (
-        <View style={{ backgroundColor: Colors.WHITE, height: "100%" }}>
-            <Image source={require("../../assets/images/login2.png")} style={{ width: "100%", height: 500 }} />
-            <View style={{
-                padding: 20,
-                alignItems: "center",
-                display: "flex",
-            }}>
+        <View style={{ backgroundColor: Colors.WHITE, height: "100%", justifyContent: 'space-between' }}>
+            <Image
+                source={require("../../assets/images/login2.png")}
+                style={{ width: "100%", height: 450 }}
+                resizeMode="cover"
+            />
+
+            <View style={{ padding: 20, marginBottom: 30 }}>
                 <Text style={{
                     fontFamily: "outfit-bold",
                     fontSize: 30,
                     textAlign: "center",
-                }}>Ready to make a new friend?</Text>
+                    marginBottom: 15
+                }}>
+                    Yeni bir dost edinmeye hazır mısın?
+                </Text>
+
                 <Text style={{
                     fontFamily: 'outfit',
-                    fontSize: 18,
+                    fontSize: 16,
                     textAlign: 'center',
-                    color: Colors.GRAY
-                }}>Let's adopt the pet which you like and make their life happy again</Text>
+                    color: Colors.GRAY,
+                    marginBottom: 40
+                }}>
+                    Beğendiğiniz evcil hayvanı sahiplenin ve hayatlarını tekrar mutlu edin
+                </Text>
+
                 <Pressable
-                    onPress={onPress}
+                    onPress={handleSignIn}
                     style={{
-                        padding: 14,
-                        marginTop: 100,
+                        padding: 16,
+                        marginBottom: 15,
                         backgroundColor: Colors.PRIMARY,
-                        width: '100%',
-                        borderRadius: 14
+                        borderRadius: 14,
+                        alignItems: 'center'
                     }}
                 >
                     <Text style={{
                         fontFamily: 'outfit-medium',
-                        fontSize: 20,
-                        textAlign: 'center',
+                        fontSize: 18,
                         color: 'white'
-                    }}>Sign in with Google</Text>
+                    }}>
+                        Giriş Yap
+                    </Text>
+                </Pressable>
+
+                <Pressable
+                    onPress={handleSignUp}
+                    style={{
+                        padding: 16,
+                        backgroundColor: 'white',
+                        borderWidth: 1,
+                        borderColor: Colors.PRIMARY,
+                        borderRadius: 14,
+                        alignItems: 'center'
+                    }}
+                >
+                    <Text style={{
+                        fontFamily: 'outfit-medium',
+                        fontSize: 18,
+                        color: Colors.PRIMARY
+                    }}>
+                        Hesap Oluştur
+                    </Text>
                 </Pressable>
             </View>
         </View>

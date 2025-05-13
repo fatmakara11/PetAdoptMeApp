@@ -1,65 +1,81 @@
-import { Ionicons } from '@expo/vector-icons'
-import React from 'react'
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import Colors from '../../../constants/Colors'
+import Ionicons from '@expo/vector-icons/Ionicons';
+import React from 'react';
+import { Image, StyleSheet, Text, View } from 'react-native';
+import Colors from '../../../constants/Colors';
 
 export default function OwnerInfo({ pet }) {
     return (
         <View style={styles.container}>
-            <TouchableOpacity style={styles.ownerContainer}>
+
+
+            <View style={styles.ownerCard}>
                 <Image
-                    source={{ uri: pet?.user?.imageUrl || pet?.userImage || 'https://placehold.co/60x60/png' }}
+                    source={{ uri: pet.userImage }}
                     style={styles.ownerImage}
                 />
-
                 <View style={styles.ownerInfo}>
-                    <Text style={styles.ownerName}>{pet?.user?.name || pet?.username || 'Pet Owner'}</Text>
+                    <Text style={styles.ownerName}>{pet.userName}</Text>
                     <Text style={styles.ownerLabel}>Pet Owner</Text>
                 </View>
 
-                <View style={styles.arrowContainer}>
-                    <Ionicons name="chevron-forward" size={24} color={Colors.GRAY} />
-                </View>
-            </TouchableOpacity>
+                <Ionicons name="send-sharp" size={24} color={Colors.PRIMARY} />
+            </View>
         </View>
-    )
+    );
 }
 
 const styles = StyleSheet.create({
     container: {
         marginHorizontal: 20,
-        marginVertical: 15,
+        marginTop: 10,
+        marginBottom: 20,
     },
-    ownerContainer: {
-        display: 'flex',
+    heading: {
+        fontSize: 18,
+        fontFamily: 'outfit-medium',
+        marginBottom: 8,
+        fontWeight: 'bold'
+    },
+    description: {
+        color: Colors.GRAY,
+        fontSize: 14,
+        fontFamily: 'outfit-regular',
+        lineHeight: 20,
+        marginBottom: 4
+    },
+    readMore: {
+        color: Colors.PRIMARY,
+        fontSize: 14,
+        fontFamily: 'outfit-medium',
+    },
+    ownerCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: Colors.WHITE,
+        marginHorizontal: 20,
         borderWidth: 1,
         borderRadius: 15,
-        padding: 10,
-        gap: 20,
-        borderColor: '#eee',
-        justifyContent: 'space-between'
+        borderColor: '#EEEEEE',
+        padding: 15,
+        backgroundColor: Colors.WHITE,
+        marginBottom: 20
     },
     ownerImage: {
-        width: 50,
-        height: 50,
-        borderRadius: 99
+        width: 45,
+        height: 45,
+        borderRadius: 25
     },
     ownerInfo: {
         flex: 1,
+        marginLeft: 15
     },
     ownerName: {
+        fontSize: 16,
         fontFamily: 'outfit-medium',
-        fontSize: 18
+        fontWeight: '500'
     },
     ownerLabel: {
-        fontFamily: 'outfit',
         fontSize: 14,
-        color: Colors.GRAY
-    },
-    arrowContainer: {
-        padding: 5
+        color: Colors.GRAY,
+        fontFamily: 'outfit-regular'
     }
-});
+}); 

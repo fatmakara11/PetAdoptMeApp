@@ -1,14 +1,16 @@
 import { ClerkProvider } from '@clerk/clerk-expo';
+import Constants from 'expo-constants';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 
-// Create secure token cache implementation
+// Güvenli token saklama işlevi
 const tokenCache = {
   async getToken(key) {
     try {
       return SecureStore.getItemAsync(key);
     } catch (err) {
+      console.error("Token alma hatası:", err);
       return null;
     }
   },
@@ -16,10 +18,18 @@ const tokenCache = {
     try {
       return SecureStore.setItemAsync(key, value);
     } catch (err) {
+      console.error("Token kaydetme hatası:", err);
       return;
     }
   },
 };
+
+// Clerk anahtarını sabit olarak tanımlayalım
+// Bu, app.json'dan alınan değer çalışmazsa kullanılacak
+const clerkKey = Constants.expoConfig?.extra?.clerkPublishableKey ||
+  "pk_test_ZmxhdC1zbGltZS0xNC5jbGVyay5hY2NvdW50cy5kZXYk";
+
+console.log("Clerk anahtarı kullanılıyor:", clerkKey);
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -35,7 +45,7 @@ export default function RootLayout() {
   return (
     <ClerkProvider
       tokenCache={tokenCache}
-      publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      publishableKey={clerkKey}
     >
       <Stack
         screenOptions={{
