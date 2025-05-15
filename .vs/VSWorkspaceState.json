@@ -2,9 +2,9 @@
   "ExpandedNodes": [
     "",
     "\\app",
-    "\\app\\components",
-    "\\app\\pet-details"
+    "\\app\\(tabs)",
+    "\\app\\components"
   ],
-  "SelectedNode": "\\app\\components",
+  "SelectedNode": "\\app\\(tabs)\\favorite.jsx",
   "PreviewInSolutionExplorer": false
 }

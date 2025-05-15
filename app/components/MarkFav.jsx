@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import Shared from '../../Shared/Shared';
 
-export default function MarkFav({ pet }) {
+export default function MarkFav({ pet ,color='black'}) {
     const { user } = useUser();
     const [favList, setFavList] = useState([]);
 
@@ -26,16 +26,22 @@ export default function MarkFav({ pet }) {
             GetFav();
         }
     };
-
+    const removeFromFav = async () => {
+        if (favList.includes(pet.id)) {
+            const updatedFavs = favList.filter(id => id !== pet.id); // pet.id'yi çıkar
+            await Shared.UpdateFav(user, updatedFavs); // güncellenmiş listeyi kaydet
+            GetFav(); // yeniden fetch et ve state'i güncelle
+        }
+    };
     return (
         <View>
             {favList.includes(pet.id) ? (
-                <Pressable>
+                <Pressable onPress={removeFromFav}>
                     <Ionicons name="heart" size={30} color="red" />
                 </Pressable>
             ) : (
                 <Pressable onPress={AddToFav}>
-                    <Ionicons name="heart-outline" size={30} color="black" />
+                    <Ionicons name="heart-outline" size={30} color={color} />
                 </Pressable>
             )}
         </View>

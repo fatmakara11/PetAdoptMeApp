@@ -1,27 +1,37 @@
-import { View, Text, Image, TouchableOpacity } from 'react-native'
-import React from 'react'
-import Colors from '../../constants/Colors'
 import { useRouter } from 'expo-router';
+import React from 'react';
+import { Image, Text, TouchableOpacity, View } from 'react-native';
+import Colors from '../../constants/Colors';
+import MarkFav from './MarkFav';
 
 export default function PetListItem({ pet }) {
-    const router=useRouter();
+    const router = useRouter();
 
     if (!pet) {
         return null;
     }
 
     return (
-        <TouchableOpacity 
-        onPress={()=>router.push({
-            pathname:'/pet-details',
-            params:pet
-        })}
-        style={{
-            padding: 10,
-            marginRight: 15,
-            backgroundColor: Colors.WHITE,
-            borderRadius: 10
-        }}>
+        <TouchableOpacity
+            onPress={() => router.push({
+                pathname: '/pet-details',
+                params: pet
+            })}
+            style={{
+                padding: 10,
+                marginRight: 15,
+                backgroundColor: Colors.WHITE,
+                borderRadius: 10
+            }}>
+
+            <View style={{
+                right: 10,
+                top: 10,
+                position: 'absolute',
+                zIndex: 10
+            }}>
+                <MarkFav pet={pet} color='white' />
+            </View>
             <Image source={{ uri: pet?.imageUrl }}
                 style={{
                     width: 150,
