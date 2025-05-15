@@ -1,7 +1,8 @@
 // app/(tabs)/index.jsx
 import { useUser } from '@clerk/clerk-expo';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Link } from 'expo-router';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Colors from '../../constants/Colors';
 import PetListByCategory from '../components/PetListByCategory';
 import Slider from '../components/Slider';
@@ -35,7 +36,8 @@ export default function HomeTab() {
                 <PetListByCategory />
 
                 {/* Add new pet option */}
-                <TouchableOpacity style={styles.addNewPetContainer}>
+                <Link href={'/add-new-pet'}
+                    style={styles.addNewPetContainer}>
                     <MaterialIcons name="pets" size={24} color={Colors.PRIMARY} />
                     <Text style={{
                         fontFamily: 'outfit-medium',
@@ -43,7 +45,7 @@ export default function HomeTab() {
                         fontSize: 18
 
                     }}>Add New Pet</Text>
-                </TouchableOpacity>
+                </Link>
 
             </View>
         </ScrollView>
@@ -60,6 +62,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 20,
         marginTop: 40,
+        textAlign: 'center',
         backgroundColor: Colors.LIGHT_PRIMARY,
         borderWidth: 1,
         borderColor: Colors.PRIMARY,
