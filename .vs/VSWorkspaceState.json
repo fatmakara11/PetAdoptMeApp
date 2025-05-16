@@ -3,7 +3,9 @@
     "",
     "\\app",
     "\\app\\(tabs)",
+    "\\app\\add-new-pet",
     "\\app\\components"
   ],
+  "SelectedNode": "\\app\\add-new-pet\\index.jsx",
   "PreviewInSolutionExplorer": false
 }

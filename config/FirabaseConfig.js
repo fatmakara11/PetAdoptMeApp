@@ -1,9 +1,10 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { collection, getDocs, getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
+
 import { useEffect, useState } from 'react';
 
-// Your web app's Firebase configuration
+// Firebase config
 const firebaseConfig = {
     apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
     authDomain: "pet-adopt-63663.firebaseapp.com",
@@ -13,30 +14,20 @@ const firebaseConfig = {
     appId: "1:738692540551:web:2953095d6cdacf75443022"
 };
 
-// Log Firebase configuration for debugging (without sensitive keys)
-console.log("Firebase Config (Project ID):", firebaseConfig.projectId);
-console.log("Firebase API Key available:", !!process.env.EXPO_PUBLIC_FIREBASE_API_KEY);
+let db, storage;
 
-// Initialize Firebase
-let db;
 try {
-    console.log("Initializing Firebase app...");
     const app = initializeApp(firebaseConfig);
-    console.log("Firebase initialized successfully!");
     db = getFirestore(app);
+    storage = getStorage(app); //  Firebase Storage başlatıldı
 } catch (error) {
     console.error("Error initializing Firebase:", error);
-    // Create a dummy db object that will show clear errors if used
-    db = {
-        _errorMessage: "Firebase initialization failed",
-        collection: () => {
-            console.error("Firebase was not initialized properly. Check your configuration.");
-            return { getDocs: () => Promise.reject(new Error("Firebase not initialized")) };
-        }
-    };
+    db = { _errorMessage: "Firebase initialization failed" };
+    storage = null;
 }
 
-export { db };
+export { db, storage };
+
 
 // Hook to fetch slider data from Firestore
 export const useSliderLister = () => {
