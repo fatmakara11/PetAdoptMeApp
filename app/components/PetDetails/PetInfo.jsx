@@ -12,8 +12,9 @@ export default function PetInfo({ pet }) {
                 style={{
                     width: '100%',
                     height: 300,
-                    objectFit: 'cover'
                 }}
+                resizeMode="cover"
+                onError={(error) => console.log("Image Load Error:", error.nativeEvent)}
             />
             <View style={{
                 padding: 20,

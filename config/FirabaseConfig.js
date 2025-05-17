@@ -9,7 +9,7 @@ const firebaseConfig = {
     apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
     authDomain: "pet-adopt-63663.firebaseapp.com",
     projectId: "pet-adopt-63663",
-    storageBucket: "pet-adopt-63663.appspot.com",
+    storageBucket: "pet-adopt-63663.firebasestorage.app",
     messagingSenderId: "738692540551",
     appId: "1:738692540551:web:2953095d6cdacf75443022"
 };

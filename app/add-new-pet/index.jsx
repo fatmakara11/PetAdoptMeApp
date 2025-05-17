@@ -1,3 +1,4 @@
+import { useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
 import { addDoc, collection, getDocs } from '@firebase/firestore';
 import { Picker } from '@react-native-picker/picker';
@@ -23,8 +24,18 @@ import {
 import { db, storage } from '../../config/FirabaseConfig';
 import Colors from '../../constants/Colors';
 
+function generateRandomId(length = 16) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+}
+
 export default function AddNewPet() {
     const router = useRouter();
+    const { user } = useUser();
     const [formData, setFormData] = useState({ category: 'Dogs', sex: 'Male' });
     const [gender, setGender] = useState('Male');
     const [categoryList, setCategoryList] = useState([]);
@@ -84,7 +95,6 @@ export default function AddNewPet() {
                 console.log("Selected image URI:", uri);
 
                 try {
-                    // Create a local copy for all types of URIs to ensure compatibility
                     const filename = uri.split('/').pop();
                     const localUri = FileSystem.cacheDirectory + filename;
 
@@ -95,11 +105,10 @@ export default function AddNewPet() {
 
                     console.log("Image copied to:", localUri);
 
-                    // Check if file exists after copying
                     const fileInfo = await FileSystem.getInfoAsync(localUri);
                     if (fileInfo.exists) {
                         setImage(localUri);
-                        handleInputChange('imageUri', localUri);
+                        handleInputChange('imageUrl', localUri);
                         console.log("Image set successfully");
                     } else {
                         console.error("File doesn't exist after copying");
@@ -107,9 +116,8 @@ export default function AddNewPet() {
                     }
                 } catch (error) {
                     console.error("Error processing image:", error);
-                    // Fallback to original URI
                     setImage(uri);
-                    handleInputChange('imageUri', uri);
+                    handleInputChange('imageUrl', uri);
                 }
             } else {
                 console.log("Image picker cancelled or no image selected");
@@ -150,32 +158,56 @@ export default function AddNewPet() {
 
     const UploadImage = async () => {
         try {
-            console.log("Starting image upload for:", image);
+            if (!image) {
+                ToastAndroid.show('Lütfen bir resim seçin', ToastAndroid.SHORT);
+                return;
+            }
 
             const response = await fetch(image);
-            const blobImage = await response.blob();
+            const blob = await response.blob();
 
             const imageName = `Pet-Adopt/${Date.now()}.jpg`;
             const storageRef = ref(storage, imageName);
 
             const metadata = { contentType: 'image/jpeg' };
 
-            console.log("Uploading to Firebase Storage...");
-            await uploadBytes(storageRef, blobImage, metadata);
+            await uploadBytes(storageRef, blob, metadata);
+
             const downloadUrl = await getDownloadURL(storageRef);
-            console.log("Download URL:", downloadUrl);
+
+            const randomId = generateRandomId(16);
 
             await addDoc(collection(db, 'Pets'), {
-                ...formData,
+                about: formData.about,
+                address: formData.address,
+                age: formData.age,
+                breed: formData.breed,
+                category: formData.category,
+                id: randomId,
                 imageUrl: downloadUrl,
+                name: formData.name,
+                sex: formData.sex,
+                userImage: user.imageUrl,
+                userName:
+                    (user.firstName && user.lastName)
+                        ? user.firstName + ' ' + user.lastName
+                        : (user.firstName || user.lastName || user.username || user.emailAddresses[0]?.emailAddress || 'Unknown'),
+                useremail: user.emailAddresses[0]?.emailAddress,
+                weight: formData.weight,
                 createdAt: new Date()
             });
 
-            ToastAndroid.show('Pet added successfully!', ToastAndroid.SHORT);
+            ToastAndroid.show('Pet başarıyla eklendi!', ToastAndroid.SHORT);
             router.back();
         } catch (error) {
-            console.error("Error uploading image:", JSON.stringify(error));
-            ToastAndroid.show('Error adding pet. Please try again.', ToastAndroid.LONG);
+            console.error("Firebase Storage upload hatası:", error);
+            if (error.code === "storage/unauthorized") {
+                ToastAndroid.show('Yetkiniz yok! Storage kurallarını kontrol edin.', ToastAndroid.LONG);
+            } else if (error.code === "storage/unknown") {
+                ToastAndroid.show('Bilinmeyen bir hata oluştu. Storage bucket adını ve bağlantınızı kontrol edin.', ToastAndroid.LONG);
+            } else {
+                ToastAndroid.show('Bir hata oluştu. Lütfen tekrar deneyin.', ToastAndroid.LONG);
+            }
             setIsUploading(false);
         }
     };
