@@ -271,6 +271,7 @@ export default function AddNewPet() {
                     <Picker
                         selectedValue={selectedCategory}
                         style={styles.input}
+                        itemStyle={{ color: Colors.PRIMARY }}
                         onValueChange={(itemValue) => {
                             setSelectedCategory(itemValue);
                             handleInputChange('category', itemValue);
@@ -295,6 +296,7 @@ export default function AddNewPet() {
                 <View style={styles.inputContainer}>
                     <Text style={styles.label}>Gender *</Text>
                     <Picker
+                         itemStyle={{ color: Colors.PRIMARY }}
                         selectedValue={gender}
                         style={styles.input}
                         onValueChange={(itemValue) => {
@@ -423,7 +425,7 @@ const styles = StyleSheet.create({
     label: {
         marginBottom: 5,
         fontFamily: 'outfit',
-        fontSize: 14
+        fontSize: 14,
     },
     button: {
         padding: 15,

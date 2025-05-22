@@ -1,10 +1,12 @@
 import { useUser } from '@clerk/clerk-expo';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { addDoc, collection, doc, getDoc, onSnapshot, orderBy, query } from 'firebase/firestore';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { db } from '../../config/FirabaseConfig';
+import { ActivityIndicator, Alert, FlatList, Image, KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { db, storage } from '../../config/FirabaseConfig';
 import Colors from '../../constants/Colors';
 
 export default function ChatScreen() {
@@ -18,6 +20,10 @@ export default function ChatScreen() {
     const [otherUserInfo, setOtherUserInfo] = useState(null);
     const [chatData, setChatData] = useState(null);
     const [messageText, setMessageText] = useState('');
+    const [isUploading, setIsUploading] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [viewingImage, setViewingImage] = useState(null);
+    const [showImageModal, setShowImageModal] = useState(false);
 
     const flatListRef = useRef(null);
 
@@ -77,7 +83,9 @@ export default function ChatScreen() {
                             _id: data._id || doc.id,
                             text: data.text || "",
                             createdAt: msgDate,
-                            user: data.user || { _id: 1 }
+                            user: data.user || { _id: 1 },
+                            image: data.image || null,
+                            video: data.video || null,
                         };
                     });
 
@@ -156,6 +164,133 @@ export default function ChatScreen() {
         }
     };
 
+    // Resim seçme
+    const pickImage = async () => {
+        try {
+            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert('İzin gerekli', 'Lütfen galeri erişim izni verin');
+                return;
+            }
+
+            let result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                aspect: [4, 3],
+                quality: 0.8,
+            });
+
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+                const selectedUri = result.assets[0].uri;
+                setSelectedImage(selectedUri);
+                uploadAndSendImage(selectedUri);
+            }
+        } catch (error) {
+            console.error("Resim seçme hatası:", error);
+            Alert.alert("Hata", "Resim seçilirken bir hata oluştu");
+        }
+    };
+
+    // Video seçme
+    const pickVideo = async () => {
+        try {
+            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert('İzin gerekli', 'Lütfen galeri erişim izni verin');
+                return;
+            }
+
+            let result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+                allowsEditing: true,
+                aspect: [16, 9],
+                quality: 0.8,
+            });
+
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+                const selectedUri = result.assets[0].uri;
+                uploadAndSendVideo(selectedUri);
+            }
+        } catch (error) {
+            console.error("Video seçme hatası:", error);
+            Alert.alert("Hata", "Video seçilirken bir hata oluştu");
+        }
+    };
+
+    // Dosya yükleme ve gönderme
+    const uploadAndSendImage = async (uri) => {
+        try {
+            setIsUploading(true);
+            const response = await fetch(uri);
+            const blob = await response.blob();
+
+            const imageName = `chat_images/${params.id}/${Date.now()}.jpg`;
+            const storageRef = ref(storage, imageName);
+
+            await uploadBytes(storageRef, blob);
+            const downloadUrl = await getDownloadURL(storageRef);
+
+            // Mesaj gönderme
+            const messageId = Date.now().toString();
+            const chatRef = collection(db, 'Chat', params.id, 'messages');
+
+            await addDoc(chatRef, {
+                text: "",
+                createdAt: new Date(),
+                _id: messageId,
+                image: downloadUrl,
+                user: {
+                    _id: user?.primaryEmailAddress?.emailAddress || "guest@example.com",
+                    name: user?.fullName || "Kullanıcı",
+                    avatar: user?.imageUrl || ""
+                }
+            });
+
+            setSelectedImage(null);
+            setIsUploading(false);
+        } catch (error) {
+            console.error("Resim yükleme hatası:", error);
+            Alert.alert("Hata", "Resim yüklenirken bir hata oluştu");
+            setIsUploading(false);
+        }
+    };
+
+    const uploadAndSendVideo = async (uri) => {
+        try {
+            setIsUploading(true);
+            const response = await fetch(uri);
+            const blob = await response.blob();
+
+            const videoName = `chat_videos/${params.id}/${Date.now()}.mp4`;
+            const storageRef = ref(storage, videoName);
+
+            await uploadBytes(storageRef, blob);
+            const downloadUrl = await getDownloadURL(storageRef);
+
+            // Mesaj gönderme
+            const messageId = Date.now().toString();
+            const chatRef = collection(db, 'Chat', params.id, 'messages');
+
+            await addDoc(chatRef, {
+                text: "",
+                createdAt: new Date(),
+                _id: messageId,
+                video: downloadUrl,
+                user: {
+                    _id: user?.primaryEmailAddress?.emailAddress || "guest@example.com",
+                    name: user?.fullName || "Kullanıcı",
+                    avatar: user?.imageUrl || ""
+                }
+            });
+
+            setIsUploading(false);
+        } catch (error) {
+            console.error("Video yükleme hatası:", error);
+            Alert.alert("Hata", "Video yüklenirken bir hata oluştu");
+            setIsUploading(false);
+        }
+    };
+
     const sendMessage = () => {
         try {
             if (!messageText.trim()) {
@@ -200,6 +335,11 @@ export default function ChatScreen() {
         }
     };
 
+    const handleImagePress = (imageUrl) => {
+        setViewingImage(imageUrl);
+        setShowImageModal(true);
+    };
+
     const renderMessageItem = ({ item }) => {
         const isCurrentUser = item.user._id === user?.primaryEmailAddress?.emailAddress;
 
@@ -208,12 +348,34 @@ export default function ChatScreen() {
                 styles.messageBubble,
                 isCurrentUser ? styles.userMessage : styles.otherMessage
             ]}>
-                <Text style={[
-                    styles.messageText,
-                    isCurrentUser ? styles.userMessageText : styles.otherMessageText
-                ]}>
-                    {item.text}
-                </Text>
+                {item.image && (
+                    <TouchableOpacity onPress={() => handleImagePress(item.image)}>
+                        <Image
+                            source={{ uri: item.image }}
+                            style={styles.messageImage}
+                            resizeMode="cover"
+                        />
+                    </TouchableOpacity>
+                )}
+
+                {item.video && (
+                    <View style={styles.videoContainer}>
+                        <TouchableOpacity style={styles.videoThumbnail}>
+                            <MaterialIcons name="play-circle-filled" size={40} color="white" />
+                            <Text style={styles.videoText}>Video</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+
+                {item.text && (
+                    <Text style={[
+                        styles.messageText,
+                        isCurrentUser ? styles.userMessageText : styles.otherMessageText
+                    ]}>
+                        {item.text}
+                    </Text>
+                )}
+
                 <Text style={[
                     styles.messageTime,
                     isCurrentUser ? styles.userMessageTime : styles.otherMessageTime
@@ -269,6 +431,13 @@ export default function ChatScreen() {
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
                 enabled={Platform.OS === 'ios'}
             >
+                {isUploading && (
+                    <View style={styles.uploadingContainer}>
+                        <ActivityIndicator size="small" color={Colors.PRIMARY} />
+                        <Text style={styles.uploadingText}>Dosya yükleniyor...</Text>
+                    </View>
+                )}
+
                 <FlatList
                     ref={flatListRef}
                     data={messages}
@@ -279,6 +448,15 @@ export default function ChatScreen() {
                 />
 
                 <View style={styles.inputContainer}>
+                    <View style={styles.inputActions}>
+                        <TouchableOpacity onPress={pickImage} style={styles.attachButton}>
+                            <Ionicons name="image-outline" size={24} color="#666" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={pickVideo} style={styles.attachButton}>
+                            <Ionicons name="videocam-outline" size={24} color="#666" />
+                        </TouchableOpacity>
+                    </View>
+
                     <TextInput
                         style={styles.input}
                         placeholder="Mesaj yazın..."
@@ -287,6 +465,7 @@ export default function ChatScreen() {
                         onChangeText={setMessageText}
                         multiline={false}
                     />
+
                     <TouchableOpacity
                         style={[
                             styles.sendButton,
@@ -303,6 +482,28 @@ export default function ChatScreen() {
                     </TouchableOpacity>
                 </View>
             </KeyboardAvoidingView>
+
+            {/* Image Viewer Modal */}
+            <Modal
+                visible={showImageModal}
+                transparent={true}
+                onRequestClose={() => setShowImageModal(false)}
+            >
+                <View style={styles.imageViewerContainer}>
+                    <TouchableOpacity
+                        style={styles.imageViewerCloseButton}
+                        onPress={() => setShowImageModal(false)}
+                    >
+                        <Ionicons name="close" size={28} color="white" />
+                    </TouchableOpacity>
+
+                    <Image
+                        source={{ uri: viewingImage }}
+                        style={styles.fullScreenImage}
+                        resizeMode="contain"
+                    />
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -344,6 +545,18 @@ const styles = StyleSheet.create({
         marginTop: 10,
         fontSize: 16,
         color: '#555'
+    },
+    uploadingContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 8,
+        backgroundColor: 'rgba(0,0,0,0.05)',
+    },
+    uploadingText: {
+        marginLeft: 8,
+        fontSize: 14,
+        color: '#555',
     },
     errorContainer: {
         flex: 1,
@@ -401,6 +614,32 @@ const styles = StyleSheet.create({
     otherMessageTime: {
         color: 'gray',
     },
+    messageImage: {
+        width: 200,
+        height: 150,
+        borderRadius: 10,
+        marginBottom: 8,
+    },
+    videoContainer: {
+        width: 200,
+        height: 150,
+        borderRadius: 10,
+        marginBottom: 8,
+        backgroundColor: '#333',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    videoThumbnail: {
+        flex: 1,
+        width: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    videoText: {
+        color: 'white',
+        marginTop: 5,
+        fontSize: 14,
+    },
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -408,6 +647,17 @@ const styles = StyleSheet.create({
         borderTopWidth: 1,
         borderTopColor: '#eee',
         backgroundColor: '#fff',
+    },
+    inputActions: {
+        flexDirection: 'row',
+        marginRight: 10,
+    },
+    attachButton: {
+        width: 35,
+        height: 35,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 5,
     },
     input: {
         flex: 1,
@@ -426,6 +676,22 @@ const styles = StyleSheet.create({
     },
     sendButtonDisabled: {
         opacity: 0.5,
+    },
+    imageViewerContainer: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.9)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    imageViewerCloseButton: {
+        position: 'absolute',
+        top: 40,
+        right: 20,
+        zIndex: 10,
+    },
+    fullScreenImage: {
+        width: '100%',
+        height: '80%',
     }
 });
 
