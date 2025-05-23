@@ -22,7 +22,7 @@ export default function PetDetails() {
             setLoading(true);
             console.log("Sohbet başlatılıyor...");
             console.log("Kullanıcı:", user?.primaryEmailAddress?.emailAddress);
-            console.log("Pet sahibi:", pet?.email);
+            console.log("Pet sahibi:", pet?.useremail);
 
             // Email bilgilerini kontrol et
             if (!user?.primaryEmailAddress?.emailAddress) {
@@ -31,80 +31,123 @@ export default function PetDetails() {
                 return;
             }
 
-            // Email yoksa, petOwnerEmail oluştur
-            const petOwnerEmail = pet?.email ||
-                (pet?.userName ? `${pet.userName.toLowerCase().replace(/\s+/g, '')}@petadopt.com` : 'pet@petadopt.com');
+            // Pet sahibinin email'ini al (useremail field'i kullan)
+            const petOwnerEmail = pet?.useremail || pet?.email;
+
+            if (!petOwnerEmail) {
+                alert("Pet sahibi bilgileri bulunamadı");
+                setLoading(false);
+                return;
+            }
 
             console.log("Kullanılan pet sahibi email:", petOwnerEmail);
+            console.log("Mevcut kullanıcı email:", user.primaryEmailAddress.emailAddress);
 
-            // Benzersiz sohbet ID'si oluştur - iki mail adresini birleştirerek
-            const chatId = user.primaryEmailAddress.emailAddress + '_' + petOwnerEmail;
+            // Kendi pet'inle sohbet etmeye çalışma kontrolü
+            if (user.primaryEmailAddress.emailAddress === petOwnerEmail) {
+                alert("Kendi pet'inizle sohbet edemezsiniz");
+                setLoading(false);
+                return;
+            }
 
-            // Oluşturulacak users dizisi
+            // Benzersiz sohbet ID'si oluştur - emails alfabetik sıraya koy
+            const sortedEmails = [user.primaryEmailAddress.emailAddress, petOwnerEmail].sort();
+            const chatId = sortedEmails.join('_');
+
+            // Kullanıcı ID'leri array'i
             const userIds = [
                 user.primaryEmailAddress.emailAddress,
                 petOwnerEmail
             ];
 
-            // Firebase'de mevcut sohbeti kontrol et
+            console.log("Chat ID:", chatId);
+            console.log("User IDs:", userIds);
+
+            // Firebase'de mevcut sohbeti kontrol et - daha güvenli yöntem
             const chatQuery = query(
                 collection(db, 'Chat'),
-                where('userIds', 'array-contains-any', userIds)
+                where('userIds', 'array-contains', user.primaryEmailAddress.emailAddress)
             );
             const querySnapshot = await getDocs(chatQuery);
 
+            // Aynı iki kullanıcı arasında sohbet var mı kontrol et
+            let existingChatId = null;
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                if (data.userIds &&
+                    data.userIds.includes(user.primaryEmailAddress.emailAddress) &&
+                    data.userIds.includes(petOwnerEmail)) {
+                    existingChatId = doc.id;
+                }
+            });
+
             // Mevcut sohbet varsa, ona yönlendir
-            if (!querySnapshot.empty) {
-                console.log("Mevcut sohbet bulundu");
-                querySnapshot.forEach((doc) => {
-                    console.log("Chat ID:", doc.id);
-                    router.push({
-                        pathname: '/chat',
-                        params: { id: doc.id }
-                    });
+            if (existingChatId) {
+                console.log("Mevcut sohbet bulundu:", existingChatId);
+                router.push({
+                    pathname: '/chat',
+                    params: { id: existingChatId }
                 });
                 setLoading(false);
                 return;
             }
 
-            // Yeni sohbet oluştur            
+            // Yeni sohbet oluştur
             console.log("Yeni sohbet oluşturuluyor...");
 
-            await setDoc(doc(db, 'Chat', chatId), {
+            // 🔧 İsim bilgilerini daha akıllı şekilde al
+            const currentUserName = user?.userName ||
+                user?.firstName + ' ' + user?.lastName ||
+                user?.firstName ||
+                user?.primaryEmailAddress?.emailAddress?.split('@')[0] ||
+                'Kullanıcı';
+
+            const petOwnerName = pet?.userName ||
+                pet?.ownerName ||
+                petOwnerEmail?.split('@')[0] ||
+                'Pet Sahibi';
+
+            console.log("🏷️ Kullanıcı adları:");
+            console.log("Current user name:", currentUserName);
+            console.log("Pet owner name:", petOwnerName);
+
+            const chatData = {
                 id: chatId,
-                // Firebase görseline uygun userIds dizisi
                 userIds: userIds,
-                // Firebase görseline uygun users nesnesi
                 users: [
                     {
                         email: user.primaryEmailAddress.emailAddress,
                         imageUrl: user?.imageUrl || '',
-                        name: user?.fullName || 'Kullanıcı',
+                        name: currentUserName,
                         role: 'adopter'
                     },
                     {
                         email: petOwnerEmail,
                         imageUrl: pet?.userImage || '',
-                        name: pet?.userName || `${pet?.name || 'Pet'} Sahibi`,
+                        name: petOwnerName,
                         petId: pet?.id || '',
                         petName: pet?.name || '',
                         role: 'owner'
                     }
                 ],
-                userIds: [user?.primaryEmailAddress?.emailAddress, petOwnerEmail],
                 petDetails: {
                     id: pet?.id || '',
                     name: pet?.name || '',
-                    image: pet?.image || '',
+                    image: pet?.imageUrl || pet?.image || '',
                     breed: pet?.breed || ''
                 },
                 createdAt: new Date(),
                 lastMessage: null,
                 lastMessageTime: new Date()
-            });
+            };
+
+            console.log("Oluşturulacak chat data:", chatData);
+
+            await setDoc(doc(db, 'Chat', chatId), chatData);
+
+            console.log("Sohbet başarıyla oluşturuldu!");
 
             // Yeni sohbete yönlendir
-            console.log("Sohbet sayfasına yönlendiriliyor");
             router.push({
                 pathname: '/chat',
                 params: { id: chatId }

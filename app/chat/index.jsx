@@ -241,7 +241,7 @@ export default function ChatScreen() {
                 image: downloadUrl,
                 user: {
                     _id: user?.primaryEmailAddress?.emailAddress || "guest@example.com",
-                    name: user?.fullName || "Kullanıcı",
+                    name: user?.userName || user?.firstName || user?.primaryEmailAddress?.emailAddress?.split('@')[0] || "Kullanıcı",
                     avatar: user?.imageUrl || ""
                 }
             });
@@ -278,7 +278,7 @@ export default function ChatScreen() {
                 video: downloadUrl,
                 user: {
                     _id: user?.primaryEmailAddress?.emailAddress || "guest@example.com",
-                    name: user?.fullName || "Kullanıcı",
+                    name: user?.userName || user?.firstName || user?.primaryEmailAddress?.emailAddress?.split('@')[0] || "Kullanıcı",
                     avatar: user?.imageUrl || ""
                 }
             });
@@ -311,7 +311,7 @@ export default function ChatScreen() {
                 _id: messageId,
                 user: {
                     _id: user?.primaryEmailAddress?.emailAddress || "guest@example.com",
-                    name: user?.fullName || "Kullanıcı",
+                    name: user?.userName || user?.firstName || user?.primaryEmailAddress?.emailAddress?.split('@')[0] || "Kullanıcı",
                     avatar: user?.imageUrl || ""
                 }
             }).then(() => {

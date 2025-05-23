@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "C:\\Users\\fatma\\OneDrive\\Desktop\\React Native\\PetAdoptMeApp\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\fatma\\OneDrive\\Desktop\\React Native\\PetAdoptMeApp\\app\\(tabs)\\profile.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:app\\(tabs)\\profile.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\fatma\\OneDrive\\Desktop\\React Native\\PetAdoptMeApp\\app\\(tabs)\\inbox.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:app\\(tabs)\\inbox.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     },
@@ -47,6 +51,19 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "profile.jsx",
+              "DocumentMoniker": "C:\\Users\\fatma\\OneDrive\\Desktop\\React Native\\PetAdoptMeApp\\app\\(tabs)\\profile.jsx",
+              "RelativeDocumentMoniker": "app\\(tabs)\\profile.jsx",
+              "ToolTip": "C:\\Users\\fatma\\OneDrive\\Desktop\\React Native\\PetAdoptMeApp\\app\\(tabs)\\profile.jsx",
+              "RelativeToolTip": "app\\(tabs)\\profile.jsx",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
+              "WhenOpened": "2025-05-22T16:25:55.344Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
               "Title": "inbox.jsx",
               "DocumentMoniker": "C:\\Users\\fatma\\OneDrive\\Desktop\\React Native\\PetAdoptMeApp\\app\\(tabs)\\inbox.jsx",
               "RelativeDocumentMoniker": "app\\(tabs)\\inbox.jsx",
@@ -59,7 +76,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "index.jsx",
               "DocumentMoniker": "C:\\Users\\fatma\\OneDrive\\Desktop\\React Native\\PetAdoptMeApp\\app\\add-new-pet\\index.jsx",
               "RelativeDocumentMoniker": "app\\add-new-pet\\index.jsx",
@@ -67,12 +84,11 @@
               "RelativeToolTip": "app\\add-new-pet\\index.jsx",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
-              "WhenOpened": "2025-05-15T15:51:44.762Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-05-15T15:51:44.762Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "MarkFav.jsx",
               "DocumentMoniker": "C:\\Users\\fatma\\OneDrive\\Desktop\\React Native\\PetAdoptMeApp\\app\\components\\MarkFav.jsx",
               "RelativeDocumentMoniker": "app\\components\\MarkFav.jsx",
@@ -84,7 +100,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "index.jsx",
               "DocumentMoniker": "C:\\Users\\fatma\\OneDrive\\Desktop\\React Native\\PetAdoptMeApp\\app\\pet-details\\index.jsx",
               "RelativeDocumentMoniker": "app\\pet-details\\index.jsx",
@@ -96,7 +112,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "index.jsx",
               "DocumentMoniker": "C:\\Users\\fatma\\OneDrive\\Desktop\\React Native\\PetAdoptMeApp\\app\\index.jsx",
               "RelativeDocumentMoniker": "app\\index.jsx",

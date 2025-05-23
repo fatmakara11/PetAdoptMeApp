@@ -39,24 +39,35 @@ export default function ProfileTab() {
     // Menu items configuration
     const menuItems = [
         {
+            id: 1,
             icon: "add-circle",
             label: "Add New Pet",
             color: Colors.PRIMARY,
             onPress: navigateToAddNewPet
         },
         {
+            id: 2,
+            icon: "bookmark",
+            label: "My Post",
+            color: Colors.PRIMARY,
+            onPress: () => router.push('/user-post')
+        },
+        {
+            id: 3,
             icon: "heart",
             label: "Favorites",
             color: Colors.PRIMARY,
             onPress: () => router.push('/(tabs)/favorite')
         },
         {
+            id: 4,
             icon: "chatbubble",
             label: "Inbox",
             color: Colors.PRIMARY,
             onPress: () => router.push('/(tabs)/inbox')
         },
         {
+            id: 5,
             icon: "log-out",
             label: "Logout",
             color: Colors.PRIMARY,

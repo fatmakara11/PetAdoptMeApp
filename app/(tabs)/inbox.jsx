@@ -1,8 +1,8 @@
 import { useUser } from '@clerk/clerk-expo'
 import { Ionicons } from '@expo/vector-icons'
-import { collection, getDocs, query, where } from 'firebase/firestore'
+import { collection, deleteDoc, doc, getDocs, query, where } from 'firebase/firestore'
 import React, { useEffect, useState } from 'react'
-import { ActivityIndicator, FlatList, SafeAreaView, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, FlatList, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { db } from '../../config/FirabaseConfig'
 import Colors from '../../constants/Colors'
 import UserItem from '../components/inbox/UserItem'
@@ -22,27 +22,82 @@ export default function Inbox() {
     useEffect(() => {
         if (userList.length > 0) {
             const filtered = FilterUserList();
-            console.log("Filtered users:", filtered);
             setFilteredList(filtered);
         }
     }, [userList]);
+
+    // 🗑️ Tüm sohbetleri Firebase'den sil
+    const deleteAllChats = async () => {
+        try {
+            console.log("🗑️ Tüm sohbetler siliniyor...");
+            const allChatsQuery = query(collection(db, 'Chat'));
+            const allChatsSnapshot = await getDocs(allChatsQuery);
+
+            console.log("📊 Silinecek sohbet sayısı:", allChatsSnapshot.size);
+
+            for (const chatDoc of allChatsSnapshot.docs) {
+                console.log("🗑️ Sohbet siliniyor:", chatDoc.id);
+                await deleteDoc(doc(db, 'Chat', chatDoc.id));
+            }
+
+            console.log("✅ Tüm sohbetler silindi!");
+            setUserList([]);
+            setFilteredList([]);
+        } catch (error) {
+            console.error("❌ Sohbet silme hatası:", error);
+        }
+    };
 
     //kullanıcı listesinin alınması mevcut kullanıcı e-postalarına bağlıdır
     const GetUserList = async () => {
         setLoading(true);
         setUserList([]);
-        const q = query(collection(db, 'Chat'),
-            where('userIds', 'array-contains', user?.primaryEmailAddress?.emailAddress));
-        const querySnapshot = await getDocs(q);
-        console.log("Query result count:", querySnapshot.size);
-        querySnapshot.forEach((doc) => {
-            console.log("Chat document:", doc.id, doc.data());
-            setUserList(prev => [...prev, {
-                id: doc.id,
-                ...doc.data()
-            }]);
-        });
-        setLoading(false);
+
+        const currentUserEmail = user?.primaryEmailAddress?.emailAddress;
+        console.log("📧 Inbox yükleniyor - Kullanıcı email:", currentUserEmail);
+
+        if (!currentUserEmail) {
+            console.error("❌ Kullanıcı email'i bulunamadı");
+            setLoading(false);
+            return;
+        }
+
+        try {
+            // Firebase'den bu kullanıcının dahil olduğu tüm sohbetleri al
+            console.log("🔍 Firebase query: userIds array-contains", currentUserEmail);
+            const q = query(collection(db, 'Chat'),
+                where('userIds', 'array-contains', currentUserEmail));
+            const querySnapshot = await getDocs(q);
+
+            console.log("📊 Firebase'den dönen sohbet sayısı:", querySnapshot.size);
+
+            if (querySnapshot.size === 0) {
+                console.log("❌ Bu kullanıcı için hiçbir sohbet bulunamadı!");
+                console.log("🔍 Kontrol edilecek email:", currentUserEmail);
+            }
+
+            const chatList = [];
+            querySnapshot.forEach((doc) => {
+                const chatData = doc.data();
+                console.log("\n💬 Bulunan sohbet:");
+                console.log("📄 Document ID:", doc.id);
+                console.log("📧 UserIds array:", chatData.userIds);
+                console.log("👥 Users array:", chatData.users?.map(u => ({ email: u.email, name: u.name })));
+                console.log("✅ Array contains check:", chatData.userIds?.includes(currentUserEmail));
+
+                chatList.push({
+                    id: doc.id,
+                    ...chatData
+                });
+            });
+
+            console.log("✅ Toplanan sohbet listesi:", chatList.length, "adet");
+            setUserList(chatList);
+        } catch (error) {
+            console.error("❌ Sohbet listesi yükleme hatası:", error);
+        } finally {
+            setLoading(false);
+        }
     }
 
     //diğer kullanıcıların listesini filtrele
@@ -50,20 +105,54 @@ export default function Inbox() {
         const list = [];
         const currentUserEmail = user?.primaryEmailAddress?.emailAddress;
 
-        userList.forEach((record) => {
-            console.log("Processing record:", record.id, record.users);
-            const otherUser = record.users?.filter((u) => u.email !== currentUserEmail);
-            console.log("Other users found:", otherUser);
-            if (otherUser && otherUser.length > 0) {
+        console.log("🔄 Filtreleme başlıyor - Mevcut kullanıcı:", currentUserEmail);
+        console.log("📋 Toplam işlenecek sohbet:", userList.length);
+
+        userList.forEach((record, index) => {
+            console.log(`\n--- Sohbet ${index + 1} işleniyor ---`);
+            console.log("📄 Record ID:", record.id);
+            console.log("📧 UserIds:", record.userIds);
+            console.log("👥 Users array:", record.users);
+
+            // userIds kontrolü
+            if (!record.userIds || !Array.isArray(record.userIds)) {
+                console.warn("⚠️ userIds eksik veya geçersiz");
+                return;
+            }
+
+            // users kontrolü
+            if (!record.users || !Array.isArray(record.users)) {
+                console.warn("⚠️ users array eksik veya geçersiz");
+                return;
+            }
+
+            // Diğer kullanıcıyı bul
+            const otherUser = record.users.find((u) =>
+                u && u.email && u.email !== currentUserEmail
+            );
+
+            console.log("🔍 Bulunan diğer kullanıcı:", otherUser);
+
+            if (otherUser) {
                 const result = {
                     docId: record.id,
-                    ...otherUser[0]
-                }
-                console.log("Adding user to list:", result);
+                    email: otherUser.email,
+                    name: otherUser.name || otherUser.email?.split('@')[0] || 'Kullanıcı',
+                    imageUrl: otherUser.imageUrl || '',
+                    role: otherUser.role || 'user',
+                    petId: otherUser.petId || '',
+                    petName: otherUser.petName || ''
+                };
+
+                console.log("✅ Listeye eklenen kullanıcı:", result);
                 list.push(result);
+            } else {
+                console.warn("❌ Bu sohbette diğer kullanıcı bulunamadı");
             }
         });
-        return list; // Return the filtered list
+
+        console.log("🎯 Final filtrelenmiş liste:", list.length, "adet");
+        return list;
     }
 
     return (
@@ -77,6 +166,10 @@ export default function Inbox() {
                             <Text style={styles.countText}>{filteredList.length}</Text>
                         </View>
                     )}
+                    {/* 🗑️ Temizle butonu */}
+                    <TouchableOpacity onPress={deleteAllChats} style={styles.cleanButton}>
+                        <Text style={styles.cleanButtonText}>🗑️ Temizle</Text>
+                    </TouchableOpacity>
                 </View>
             </View>
 
@@ -135,6 +228,7 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         color: '#333',
+        flex: 1,
     },
     countContainer: {
         backgroundColor: Colors.PRIMARY,
@@ -148,6 +242,18 @@ const styles = StyleSheet.create({
     countText: {
         color: '#fff',
         fontSize: 14,
+        fontWeight: 'bold',
+    },
+    cleanButton: {
+        backgroundColor: '#FF4444',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 10,
+        marginLeft: 10,
+    },
+    cleanButtonText: {
+        color: '#fff',
+        fontSize: 12,
         fontWeight: 'bold',
     },
     listContainer: {
@@ -196,5 +302,5 @@ const styles = StyleSheet.create({
         color: '#666',
         textAlign: 'center',
         lineHeight: 22,
-    }
+    },
 });
